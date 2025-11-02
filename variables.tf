@@ -49,13 +49,13 @@ variable "tags" {
 variable "deployment_model_name" {
   description = "Name of the deployment model"
   type        = string
-  default     = "gpt-4o-deployment"
+  default     = "gpt-5-codex-deployment"
 }
 
 variable "deployment_model_version" {
-  description = "Version of the GPT-4o model"
+  description = "Version of the GPT-5-Codex model"
   type        = string
-  default     = "2024-11-20"
+  default     = "2025-09-15"
 }
 
 variable "deployment_sku_name" {

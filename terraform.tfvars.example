@@ -16,9 +16,9 @@ private_dns_zone_ids = {
   openai            = "/subscriptions/<subscription-id>/resourceGroups/<hub-rg-name>/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com"
 }
 
-# Optional: Deployment configuration (GPT-4o model)
-deployment_model_name    = "gpt-4o-deployment"
-deployment_model_version = "2024-11-20"
+# Optional: Deployment configuration (GPT-5-Codex model)
+deployment_model_name    = "gpt-5-codex-deployment"
+deployment_model_version = "2025-09-15"
 deployment_capacity      = 10
 
 # Optional: Tags

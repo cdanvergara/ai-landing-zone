@@ -18,14 +18,15 @@ This document outlines the changes made to migrate from the old hub-based AI Fou
 
 #### New/Updated Resources:
 - `azurerm_cognitive_account.ai_foundry` (unified AI services)
-- `azurerm_cognitive_deployment.gpt4o` (GPT-4o instead of GPT-5-Codex)
+- `azurerm_cognitive_deployment.gpt5_codex` (GPT-5-Codex with latest version)
 - `azapi_resource.ai_project` (child project resource)
 - `azurerm_private_endpoint.ai_foundry_pe` (unified private endpoint)
 
 ### 3. Model Updates
-- **Model**: Changed from hypothetical "GPT-5-Codex" to real "GPT-4o"
-- **Version**: Updated to "2024-11-20" (latest GPT-4o version)
+- **Model**: Updated to use GPT-5-Codex (latest OpenAI coding model)
+- **Version**: Updated to "2025-09-15" (latest GPT-5-Codex version)
 - **Deployment**: Now created directly in AI Foundry resource
+- **Capabilities**: Multimodal coding model with 272K context length
 
 ### 4. Variable Changes
 - Updated `ai_foundry_name` validation for AI Services naming requirements

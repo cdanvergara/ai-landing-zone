@@ -1,13 +1,13 @@
 # AI Landing Zone - Azure AI Foundry with Private Endpoints
 
-This Terraform template deploys the new Azure AI Foundry unified platform with a GPT-4o deployment using private endpoints for secure, enterprise-grade AI infrastructure.
+This Terraform template deploys the new Azure AI Foundry unified platform with a GPT-5-Codex deployment using private endpoints for secure, enterprise-grade AI infrastructure.
 
 ## Architecture Overview
 
 This template creates:
 - **Azure AI Foundry Resource**: Unified AI services platform (replaces separate OpenAI service)
 - **Azure AI Foundry Project**: Project workspace for AI development (child resource)
-- **GPT-4o Model Deployment**: Latest GPT-4o model deployment within AI Foundry
+- **GPT-5-Codex Model Deployment**: Latest GPT-5-Codex model optimized for coding tasks with multimodal capabilities
 - **Private Endpoints**: For secure access to AI Foundry services
 - **Supporting Services**: Storage Account, Key Vault, Container Registry, Application Insights
 
@@ -97,7 +97,7 @@ After successful deployment, the following outputs are available:
 
 - `ai_foundry_id`, `ai_foundry_name`, `ai_foundry_endpoint`: AI Foundry resource identifiers
 - `ai_project_id` and `ai_project_name`: AI Foundry Project identifiers
-- `gpt4o_deployment_name`: Name of the deployed GPT-4o model
+- `gpt5_codex_deployment_name`: Name of the deployed GPT-5-Codex model
 - `ai_foundry_private_endpoint_id`: Private endpoint ID
 
 ## Security Features

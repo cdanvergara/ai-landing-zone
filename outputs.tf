@@ -28,9 +28,9 @@ output "ai_project_name" {
   value       = azapi_resource.ai_project.name
 }
 
-output "gpt4o_deployment_name" {
-  description = "Name of the GPT-4o deployment"
-  value       = azurerm_cognitive_deployment.gpt4o.name
+output "gpt5_codex_deployment_name" {
+  description = "Name of the GPT-5-Codex deployment"
+  value       = azurerm_cognitive_deployment.gpt5_codex.name
 }
 
 output "ai_foundry_private_endpoint_id" {

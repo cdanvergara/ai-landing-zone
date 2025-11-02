@@ -118,14 +118,14 @@ resource "azurerm_cognitive_account" "ai_foundry" {
   tags = var.tags
 }
 
-# GPT-4o Model Deployment in AI Foundry
-resource "azurerm_cognitive_deployment" "gpt4o" {
+# GPT-5-Codex Model Deployment in AI Foundry
+resource "azurerm_cognitive_deployment" "gpt5_codex" {
   name                 = var.deployment_model_name
   cognitive_account_id = azurerm_cognitive_account.ai_foundry.id
 
   model {
     format  = "OpenAI"
-    name    = "gpt-4o"
+    name    = "gpt-5-codex"
     version = var.deployment_model_version
   }
 
@@ -170,7 +170,7 @@ resource "azapi_resource" "ai_project" {
 
   body = jsonencode({
     properties = {
-      description  = "AI Foundry Project with GPT-4o deployment"
+      description  = "AI Foundry Project with GPT-5-Codex deployment"
       friendlyName = var.ai_project_name
     }
   })
