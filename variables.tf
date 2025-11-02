@@ -10,8 +10,18 @@ variable "location" {
 }
 
 variable "ai_foundry_name" {
-  description = "Name of the AI Foundry Hub"
+  description = "Name of the AI Foundry Hub (will be used to derive names for related resources)"
   type        = string
+
+  validation {
+    condition     = length(var.ai_foundry_name) <= 15 && length(var.ai_foundry_name) >= 3
+    error_message = "The ai_foundry_name must be between 3 and 15 characters to ensure derived resource names meet Azure naming requirements."
+  }
+
+  validation {
+    condition     = can(regex("^[a-z0-9-]+$", var.ai_foundry_name))
+    error_message = "The ai_foundry_name must contain only lowercase letters, numbers, and hyphens."
+  }
 }
 
 variable "ai_project_name" {

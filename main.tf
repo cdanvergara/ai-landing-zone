@@ -10,7 +10,11 @@ resource "azurerm_resource_group" "rg" {
 
 # Storage Account for AI Foundry
 resource "azurerm_storage_account" "ai_storage" {
-  name                     = lower(replace("${var.ai_foundry_name}st", "-", ""))
+  name = substr(
+    lower(replace("${var.ai_foundry_name}st", "-", "")),
+    0,
+    24
+  )
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
@@ -26,7 +30,11 @@ resource "azurerm_storage_account" "ai_storage" {
 
 # Key Vault for AI Foundry
 resource "azurerm_key_vault" "ai_keyvault" {
-  name                       = lower(replace("${var.ai_foundry_name}-kv", "-", ""))
+  name = substr(
+    lower(replace("${var.ai_foundry_name}-kv", "/[^a-z0-9-]/", "")),
+    0,
+    24
+  )
   location                   = azurerm_resource_group.rg.location
   resource_group_name        = azurerm_resource_group.rg.name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
@@ -49,7 +57,11 @@ resource "azurerm_application_insights" "ai_insights" {
 
 # Container Registry for AI Foundry
 resource "azurerm_container_registry" "ai_acr" {
-  name                = lower(replace("${var.ai_foundry_name}acr", "-", ""))
+  name = substr(
+    lower(replace("${var.ai_foundry_name}acr", "-", "")),
+    0,
+    50
+  )
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   sku                 = "Premium"
@@ -212,6 +224,7 @@ resource "azapi_resource" "ai_project" {
 }
 
 # Connection from AI Project to OpenAI service
+# Note: Using AAD (Managed Identity) authentication to avoid storing secrets in Terraform state
 resource "azapi_resource" "openai_connection" {
   type      = "Microsoft.MachineLearningServices/workspaces/connections@2024-04-01"
   name      = "openai-connection"
@@ -221,11 +234,8 @@ resource "azapi_resource" "openai_connection" {
     properties = {
       category      = "AzureOpenAI"
       target        = azurerm_cognitive_account.openai.endpoint
-      authType      = "ApiKey"
+      authType      = "AAD"
       isSharedToAll = true
-      credentials = {
-        key = azurerm_cognitive_account.openai.primary_access_key
-      }
       metadata = {
         ApiVersion = "2024-02-01"
         ResourceId = azurerm_cognitive_account.openai.id
@@ -235,6 +245,18 @@ resource "azapi_resource" "openai_connection" {
 
   depends_on = [
     azurerm_cognitive_deployment.gpt5_codex,
-    azurerm_private_endpoint.openai_pe
+    azurerm_private_endpoint.openai_pe,
+    azurerm_role_assignment.ai_project_openai_user
+  ]
+}
+
+# Role assignment: Grant AI Project managed identity access to OpenAI
+resource "azurerm_role_assignment" "ai_project_openai_user" {
+  scope                = azurerm_cognitive_account.openai.id
+  role_definition_name = "Cognitive Services OpenAI User"
+  principal_id         = jsondecode(azapi_resource.ai_project.output).identity.principalId
+
+  depends_on = [
+    azapi_resource.ai_project
   ]
 }
