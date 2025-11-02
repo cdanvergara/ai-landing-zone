@@ -1,14 +1,14 @@
 # AI Landing Zone - Azure AI Foundry with Private Endpoints
 
-This Terraform template deploys Azure AI Foundry (formerly Azure Machine Learning) with a GPT-5-Codex deployment using private endpoints for secure, enterprise-grade AI infrastructure.
+This Terraform template deploys the new Azure AI Foundry unified platform with a GPT-4o deployment using private endpoints for secure, enterprise-grade AI infrastructure.
 
 ## Architecture Overview
 
 This template creates:
-- **Azure AI Foundry Hub**: Central hub for AI services and governance
-- **Azure AI Foundry Project**: Project workspace for AI development
-- **OpenAI Cognitive Services**: With GPT-5-Codex model deployment
-- **Private Endpoints**: For secure access to OpenAI and AI Hub
+- **Azure AI Foundry Resource**: Unified AI services platform (replaces separate OpenAI service)
+- **Azure AI Foundry Project**: Project workspace for AI development (child resource)
+- **GPT-4o Model Deployment**: Latest GPT-4o model deployment within AI Foundry
+- **Private Endpoints**: For secure access to AI Foundry services
 - **Supporting Services**: Storage Account, Key Vault, Container Registry, Application Insights
 
 ## Prerequisites
@@ -86,10 +86,8 @@ If you have Private DNS Zones configured in a hub VNet, provide them in the `pri
 
 ```hcl
 private_dns_zone_ids = {
-  openai              = "/subscriptions/.../privatelink.openai.azure.com"
   cognitiveservices   = "/subscriptions/.../privatelink.cognitiveservices.azure.com"
-  azureml_api         = "/subscriptions/.../privatelink.api.azureml.ms"
-  azureml_notebooks   = "/subscriptions/.../privatelink.notebooks.azure.net"
+  openai              = "/subscriptions/.../privatelink.openai.azure.com"
 }
 ```
 
@@ -97,15 +95,14 @@ private_dns_zone_ids = {
 
 After successful deployment, the following outputs are available:
 
-- `ai_hub_id` and `ai_hub_name`: AI Foundry Hub identifiers
+- `ai_foundry_id`, `ai_foundry_name`, `ai_foundry_endpoint`: AI Foundry resource identifiers
 - `ai_project_id` and `ai_project_name`: AI Foundry Project identifiers
-- `openai_account_id`, `openai_account_name`, `openai_endpoint`: OpenAI service details
-- `gpt5_codex_deployment_name`: Name of the deployed GPT-5-Codex model
-- `openai_private_endpoint_id`, `ai_hub_private_endpoint_id`: Private endpoint IDs
+- `gpt4o_deployment_name`: Name of the deployed GPT-4o model
+- `ai_foundry_private_endpoint_id`: Private endpoint ID
 
 ## Security Features
 
-- **Public network access disabled** on OpenAI and AI Hub
+- **Public network access disabled** on AI Foundry resource
 - **Private endpoints** for all network connectivity
 - **System-assigned managed identities** for secure authentication
 - **Key Vault** for secrets management
@@ -115,9 +112,17 @@ After successful deployment, the following outputs are available:
 
 After deployment, access your AI Foundry resources through:
 
-1. **Azure Portal**: Navigate to the AI Foundry Hub resource
-2. **Azure AI Studio**: https://ai.azure.com
+1. **Azure Portal**: Navigate to the AI Foundry resource
+2. **Azure AI Foundry portal**: https://ai.azure.com
 3. **Private connectivity**: Ensure you're connected to the VNet via VPN or ExpressRoute
+
+## Migration from Hub-based Model
+
+This template uses the new unified AI Foundry project model. If you're migrating from the previous hub-based model:
+- The new model simplifies resource management with a single AI Foundry resource
+- Projects are now child resources of the main AI Foundry resource
+- Model deployments are created directly in the AI Foundry resource
+- Better integration with the latest AI capabilities and agent services
 
 ## Clean Up
 

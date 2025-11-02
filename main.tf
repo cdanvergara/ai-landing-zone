@@ -45,6 +45,32 @@ resource "azurerm_key_vault" "ai_keyvault" {
   tags = var.tags
 }
 
+# Key Vault access policy for AI Foundry system identity
+resource "azurerm_key_vault_access_policy" "ai_foundry_kv_policy" {
+  key_vault_id = azurerm_key_vault.ai_keyvault.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_cognitive_account.ai_foundry.identity[0].principal_id
+
+  secret_permissions = [
+    "Get",
+    "List",
+    "Set",
+    "Delete"
+  ]
+
+  key_permissions = [
+    "Get",
+    "List",
+    "Create",
+    "Delete",
+    "Update"
+  ]
+
+  depends_on = [
+    azurerm_cognitive_account.ai_foundry
+  ]
+}
+
 # Application Insights
 resource "azurerm_application_insights" "ai_insights" {
   name                = "${var.ai_foundry_name}-insights"
@@ -70,28 +96,36 @@ resource "azurerm_container_registry" "ai_acr" {
   tags = var.tags
 }
 
-# Cognitive Services Account for OpenAI
-resource "azurerm_cognitive_account" "openai" {
-  name                = "${var.ai_foundry_name}-openai"
+# AI Foundry Resource (replaces separate OpenAI service)
+resource "azurerm_cognitive_account" "ai_foundry" {
+  name                = var.ai_foundry_name
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  kind                = "OpenAI"
+  kind                = "AIServices"
   sku_name            = "S0"
+
+  # Enable custom subdomain for private endpoints
+  custom_subdomain_name = lower(replace(var.ai_foundry_name, "-", ""))
 
   # Disable public network access for private endpoint usage
   public_network_access_enabled = false
 
+  # Enable system assigned managed identity
+  identity {
+    type = "SystemAssigned"
+  }
+
   tags = var.tags
 }
 
-# OpenAI Model Deployment - GPT-5-Codex
-resource "azurerm_cognitive_deployment" "gpt5_codex" {
+# GPT-4o Model Deployment in AI Foundry
+resource "azurerm_cognitive_deployment" "gpt4o" {
   name                 = var.deployment_model_name
-  cognitive_account_id = azurerm_cognitive_account.openai.id
+  cognitive_account_id = azurerm_cognitive_account.ai_foundry.id
 
   model {
     format  = "OpenAI"
-    name    = "gpt-5-codex"
+    name    = "gpt-4o"
     version = var.deployment_model_version
   }
 
@@ -101,16 +135,16 @@ resource "azurerm_cognitive_deployment" "gpt5_codex" {
   }
 }
 
-# Private Endpoint for OpenAI
-resource "azurerm_private_endpoint" "openai_pe" {
-  name                = "${var.ai_foundry_name}-openai-pe"
+# Private Endpoint for AI Foundry
+resource "azurerm_private_endpoint" "ai_foundry_pe" {
+  name                = "${var.ai_foundry_name}-pe"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   subnet_id           = var.subnet_id
 
   private_service_connection {
-    name                           = "${var.ai_foundry_name}-openai-psc"
-    private_connection_resource_id = azurerm_cognitive_account.openai.id
+    name                           = "${var.ai_foundry_name}-psc"
+    private_connection_resource_id = azurerm_cognitive_account.ai_foundry.id
     is_manual_connection           = false
     subresource_names              = ["account"]
   }
@@ -118,7 +152,7 @@ resource "azurerm_private_endpoint" "openai_pe" {
   dynamic "private_dns_zone_group" {
     for_each = length(var.private_dns_zone_ids) > 0 ? [1] : []
     content {
-      name = "openai-dns-zone-group"
+      name = "ai-foundry-dns-zone-group"
       private_dns_zone_ids = [
         for k, v in var.private_dns_zone_ids : v if can(regex("openai|cognitiveservices", k))
       ]
@@ -128,135 +162,44 @@ resource "azurerm_private_endpoint" "openai_pe" {
   tags = var.tags
 }
 
-# AI Foundry Hub (Azure Machine Learning Workspace)
-resource "azapi_resource" "ai_hub" {
-  type      = "Microsoft.MachineLearningServices/workspaces@2024-04-01"
-  name      = var.ai_foundry_name
-  location  = azurerm_resource_group.rg.location
-  parent_id = azurerm_resource_group.rg.id
-
-  identity {
-    type = "SystemAssigned"
-  }
-
-  body = jsonencode({
-    properties = {
-      description         = "AI Foundry Hub with Private Endpoints"
-      friendlyName        = var.ai_foundry_name
-      storageAccount      = azurerm_storage_account.ai_storage.id
-      keyVault            = azurerm_key_vault.ai_keyvault.id
-      applicationInsights = azurerm_application_insights.ai_insights.id
-      containerRegistry   = azurerm_container_registry.ai_acr.id
-      publicNetworkAccess = "Disabled"
-
-      # Hub-specific properties
-      hubResourceId = null
-      kind          = "Hub"
-    }
-    kind = "Hub"
-  })
-
-  tags = var.tags
-
-  depends_on = [
-    azurerm_storage_account.ai_storage,
-    azurerm_key_vault.ai_keyvault,
-    azurerm_application_insights.ai_insights,
-    azurerm_container_registry.ai_acr
-  ]
-}
-
-# Private Endpoint for AI Hub
-resource "azurerm_private_endpoint" "ai_hub_pe" {
-  name                = "${var.ai_foundry_name}-hub-pe"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  subnet_id           = var.subnet_id
-
-  private_service_connection {
-    name                           = "${var.ai_foundry_name}-hub-psc"
-    private_connection_resource_id = azapi_resource.ai_hub.id
-    is_manual_connection           = false
-    subresource_names              = ["amlworkspace"]
-  }
-
-  dynamic "private_dns_zone_group" {
-    for_each = length(var.private_dns_zone_ids) > 0 ? [1] : []
-    content {
-      name = "aihub-dns-zone-group"
-      private_dns_zone_ids = [
-        for k, v in var.private_dns_zone_ids : v if can(regex("azureml|ml", k))
-      ]
-    }
-  }
-
-  tags = var.tags
-}
-
-# AI Foundry Project
+# AI Foundry Project (new unified model)
 resource "azapi_resource" "ai_project" {
-  type      = "Microsoft.MachineLearningServices/workspaces@2024-04-01"
+  type      = "Microsoft.CognitiveServices/accounts/projects@2025-04-01-preview"
   name      = var.ai_project_name
-  location  = azurerm_resource_group.rg.location
-  parent_id = azurerm_resource_group.rg.id
-
-  identity {
-    type = "SystemAssigned"
-  }
+  parent_id = azurerm_cognitive_account.ai_foundry.id
 
   body = jsonencode({
     properties = {
-      description         = "AI Foundry Project with GPT-5-Codex deployment"
-      friendlyName        = var.ai_project_name
-      hubResourceId       = azapi_resource.ai_hub.id
-      publicNetworkAccess = "Disabled"
-      kind                = "Project"
+      description  = "AI Foundry Project with GPT-4o deployment"
+      friendlyName = var.ai_project_name
     }
-    kind = "Project"
   })
 
   tags = var.tags
 
   depends_on = [
-    azapi_resource.ai_hub,
-    azurerm_private_endpoint.ai_hub_pe
+    azurerm_cognitive_account.ai_foundry,
+    azurerm_private_endpoint.ai_foundry_pe
   ]
 }
 
-# Connection from AI Project to OpenAI service
-# Note: Using AAD (Managed Identity) authentication to avoid storing secrets in Terraform state
-resource "azapi_resource" "openai_connection" {
-  type      = "Microsoft.MachineLearningServices/workspaces/connections@2024-04-01"
-  name      = "openai-connection"
-  parent_id = azapi_resource.ai_project.id
-
-  body = jsonencode({
-    properties = {
-      category      = "AzureOpenAI"
-      target        = azurerm_cognitive_account.openai.endpoint
-      authType      = "AAD"
-      isSharedToAll = true
-      metadata = {
-        ApiVersion = "2024-02-01"
-        ResourceId = azurerm_cognitive_account.openai.id
-      }
-    }
-  })
+# Role assignment: Grant AI Foundry system identity access to dependent resources
+resource "azurerm_role_assignment" "ai_foundry_storage_contributor" {
+  scope                = azurerm_storage_account.ai_storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_cognitive_account.ai_foundry.identity[0].principal_id
 
   depends_on = [
-    azurerm_cognitive_deployment.gpt5_codex,
-    azurerm_private_endpoint.openai_pe,
-    azurerm_role_assignment.ai_project_openai_user
+    azurerm_cognitive_account.ai_foundry
   ]
 }
 
-# Role assignment: Grant AI Project managed identity access to OpenAI
-resource "azurerm_role_assignment" "ai_project_openai_user" {
-  scope                = azurerm_cognitive_account.openai.id
-  role_definition_name = "Cognitive Services OpenAI User"
-  principal_id         = jsondecode(azapi_resource.ai_project.output).identity.principalId
+resource "azurerm_role_assignment" "ai_foundry_keyvault_user" {
+  scope                = azurerm_key_vault.ai_keyvault.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_cognitive_account.ai_foundry.identity[0].principal_id
 
   depends_on = [
-    azapi_resource.ai_project
+    azurerm_cognitive_account.ai_foundry
   ]
 }

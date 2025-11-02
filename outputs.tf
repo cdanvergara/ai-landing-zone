@@ -3,14 +3,19 @@ output "resource_group_name" {
   value       = azurerm_resource_group.rg.name
 }
 
-output "ai_hub_id" {
-  description = "ID of the AI Foundry Hub"
-  value       = azapi_resource.ai_hub.id
+output "ai_foundry_id" {
+  description = "ID of the AI Foundry resource"
+  value       = azurerm_cognitive_account.ai_foundry.id
 }
 
-output "ai_hub_name" {
-  description = "Name of the AI Foundry Hub"
-  value       = azapi_resource.ai_hub.name
+output "ai_foundry_name" {
+  description = "Name of the AI Foundry resource"
+  value       = azurerm_cognitive_account.ai_foundry.name
+}
+
+output "ai_foundry_endpoint" {
+  description = "Endpoint URL for the AI Foundry service"
+  value       = azurerm_cognitive_account.ai_foundry.endpoint
 }
 
 output "ai_project_id" {
@@ -23,34 +28,14 @@ output "ai_project_name" {
   value       = azapi_resource.ai_project.name
 }
 
-output "openai_account_id" {
-  description = "ID of the OpenAI Cognitive Services Account"
-  value       = azurerm_cognitive_account.openai.id
+output "gpt4o_deployment_name" {
+  description = "Name of the GPT-4o deployment"
+  value       = azurerm_cognitive_deployment.gpt4o.name
 }
 
-output "openai_account_name" {
-  description = "Name of the OpenAI Cognitive Services Account"
-  value       = azurerm_cognitive_account.openai.name
-}
-
-output "openai_endpoint" {
-  description = "Endpoint URL for the OpenAI service"
-  value       = azurerm_cognitive_account.openai.endpoint
-}
-
-output "gpt5_codex_deployment_name" {
-  description = "Name of the GPT-5-Codex deployment"
-  value       = azurerm_cognitive_deployment.gpt5_codex.name
-}
-
-output "openai_private_endpoint_id" {
-  description = "ID of the OpenAI private endpoint"
-  value       = azurerm_private_endpoint.openai_pe.id
-}
-
-output "ai_hub_private_endpoint_id" {
-  description = "ID of the AI Hub private endpoint"
-  value       = azurerm_private_endpoint.ai_hub_pe.id
+output "ai_foundry_private_endpoint_id" {
+  description = "ID of the AI Foundry private endpoint"
+  value       = azurerm_private_endpoint.ai_foundry_pe.id
 }
 
 output "storage_account_name" {

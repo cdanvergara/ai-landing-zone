@@ -10,17 +10,17 @@ variable "location" {
 }
 
 variable "ai_foundry_name" {
-  description = "Name of the AI Foundry Hub (will be used to derive names for related resources)"
+  description = "Name of the AI Foundry resource (will be used to derive names for related resources)"
   type        = string
 
   validation {
-    condition     = length(var.ai_foundry_name) <= 15 && length(var.ai_foundry_name) >= 3
-    error_message = "The ai_foundry_name must be between 3 and 15 characters to ensure derived resource names meet Azure naming requirements."
+    condition     = length(var.ai_foundry_name) <= 64 && length(var.ai_foundry_name) >= 2
+    error_message = "The ai_foundry_name must be between 2 and 64 characters for AI Foundry resource naming requirements."
   }
 
   validation {
-    condition     = can(regex("^[a-z0-9-]+$", var.ai_foundry_name))
-    error_message = "The ai_foundry_name must contain only lowercase letters, numbers, and hyphens."
+    condition     = can(regex("^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$", var.ai_foundry_name))
+    error_message = "The ai_foundry_name must start and end with alphanumeric characters and can contain hyphens in between."
   }
 }
 
@@ -49,13 +49,13 @@ variable "tags" {
 variable "deployment_model_name" {
   description = "Name of the deployment model"
   type        = string
-  default     = "gpt-5-codex-deployment"
+  default     = "gpt-4o-deployment"
 }
 
 variable "deployment_model_version" {
-  description = "Version of the GPT-5-Codex model"
+  description = "Version of the GPT-4o model"
   type        = string
-  default     = "0125"
+  default     = "2024-11-20"
 }
 
 variable "deployment_sku_name" {
