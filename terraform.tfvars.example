@@ -1,0 +1,31 @@
+# Example terraform.tfvars file
+# Copy this file to terraform.tfvars and update with your values
+
+resource_group_name = "rg-ai-foundry-dev"
+location            = "eastus"
+ai_foundry_name     = "aihub-dev"
+ai_project_name     = "aiproject-dev"
+
+# Subnet ID for private endpoints (from your existing VNet)
+subnet_id = "/subscriptions/<subscription-id>/resourceGroups/<rg-name>/providers/Microsoft.Network/virtualNetworks/<vnet-name>/subnets/<subnet-name>"
+
+# Optional: Private DNS Zone IDs (if already created in hub VNet)
+# These zones should be created in your hub VNet and linked to your spoke VNet
+private_dns_zone_ids = {
+  openai              = "/subscriptions/<subscription-id>/resourceGroups/<hub-rg-name>/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com"
+  cognitiveservices   = "/subscriptions/<subscription-id>/resourceGroups/<hub-rg-name>/providers/Microsoft.Network/privateDnsZones/privatelink.cognitiveservices.azure.com"
+  azureml_api         = "/subscriptions/<subscription-id>/resourceGroups/<hub-rg-name>/providers/Microsoft.Network/privateDnsZones/privatelink.api.azureml.ms"
+  azureml_notebooks   = "/subscriptions/<subscription-id>/resourceGroups/<hub-rg-name>/providers/Microsoft.Network/privateDnsZones/privatelink.notebooks.azure.net"
+}
+
+# Optional: Deployment configuration
+deployment_model_name    = "gpt-5-codex-deployment"
+deployment_model_version = "0125"
+deployment_capacity      = 10
+
+# Optional: Tags
+tags = {
+  Environment = "Development"
+  Project     = "AI-Foundry"
+  ManagedBy   = "Terraform"
+}
